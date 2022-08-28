@@ -1,0 +1,18 @@
+#!/bin/bash -e
+
+echo "build on progress"
+
+docker build -q -t test-image .
+
+if [ $? -eq 0 ]; then
+   echo OK, build success
+   echo "Running project..."
+   docker run -it -p 5100:5100 -v ${pwd}:/app --cap-add=SYS_ADMIN  wa-api
+   if [ $? -eq 0 ]; then
+      echo "Running Project Fail"
+   fi
+else
+   echo FAIL, image not created
+   exit 1
+fi
+

@@ -6,7 +6,7 @@ const multer = require('multer');
 
 const client = new Client({
     authStrategy: new LocalAuth({ clientId: "client-one" }),
-    puppeteer: { headless: false }
+    puppeteer: {headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox']},
 });
 
 const app = express();
@@ -23,6 +23,7 @@ client.on('ready', () => {
 });
 
 client.initialize();
+
 
 app.listen(port, () => {           
     console.log(`Now listening on port ${port}`); 
