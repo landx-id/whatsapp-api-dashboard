@@ -17,4 +17,4 @@ using express.js for web server.
 run `./shell`
 
 # try it on postman
-https://www.getpostman.com/collections/cd5ccc53e2f30f06b388
+click this link https://www.getpostman.com/collections/cd5ccc53e2f30f06b388
