@@ -100,21 +100,5 @@ client.on('message', async msg => {
 });
 
 client.on('message_create', (msg) => {
-    // Fired on all message creations, including your own
-    var clientServerOptions = {
-        uri: webhookCallback,
-        body: JSON.stringify(msg),
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    }
-    request(clientServerOptions, function (error, response) {
-        if (response.statusCode == 200) {
-            console.log("success send callback");
-        }else{
-            console.log(error,response.statusCode);
-        }
-        return;
-    });
+   
 });
