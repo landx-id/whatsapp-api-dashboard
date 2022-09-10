@@ -3,10 +3,11 @@ const { Client, Location, List, Buttons, LocalAuth } = require('whatsapp-web.js'
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
-var request = require('request');
+const request = require('request');
+const e = require('express');
 
 const client = new Client({
-    authStrategy: new LocalAuth({ clientId: "client-one" }),
+    authStrategy: new LocalAuth(),
     puppeteer: {headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox']},
 });
 
@@ -64,28 +65,24 @@ client.on('authenticated', () => {
 app.post('/send', multer().any(), async (request, response) => {
     let message = request.body.message;
     let phoneNumber = request.body.number;
-
-
     // check for number in request
     if (!phoneNumber) {
-        response.status(400).send('Number not found');
+        return response.status(400).send('Number not found');
     }
     number = phoneNumber.includes('@c.us') ? phoneNumber : `${phoneNumber}@c.us`;
-
     // check for is number is registered
     const registered =  await client.isRegisteredUser(number);
     if(!registered){
-        response.status(400).send('Invalid number');    
+        return response.status(400).send('Invalid number');    
     }
     client.sendMessage(number, message);
-    response.status(200).send('message sended');
+    return response.status(200).send('message sended');
 });
 
 
 
 client.on('message', async msg => {
-    // Fired on all message creations, including your own
-    var clientServerOptions = {
+    let clientServerOptions = {
         uri: webhookCallback,
         body: JSON.stringify(msg),
         method: 'POST',
@@ -94,11 +91,12 @@ client.on('message', async msg => {
         }
     }
     request(clientServerOptions, function (error, response) {
-        console.log(error,response);
-        return;
+        if (!error && (response && response.statusCode) === 200) {
+            console.log("success");
+            return 200;
+        }else{
+            console.log(error,response);
+            return 500;
+        }
     });
-});
-
-client.on('message_create', (msg) => {
-   
 });

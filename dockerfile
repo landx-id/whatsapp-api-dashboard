@@ -24,4 +24,5 @@ COPY package.json /app
 RUN npm install
 
 COPY . /app
-CMD ["npm", "start"]
+CMD ["env","NODE_ENV=production"]
+CMD ["pm2-runtime", "index.js"]
