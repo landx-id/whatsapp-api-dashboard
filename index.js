@@ -65,6 +65,10 @@ client.on('authenticated', () => {
 app.post('/send', multer().any(), async (request, response) => {
     let message = request.body.message;
     let phoneNumber = request.body.number;
+
+    if(phoneNumber === 'status@broadcast'){
+        return response.status(200).send('brodcast received');
+    }
     // check for number in request
     if (!phoneNumber) {
         return response.status(400).send('Number not found');
