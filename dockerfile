@@ -25,4 +25,4 @@ RUN npm install
 
 COPY . /app
 CMD ["env","NODE_ENV=production"]
-CMD ["pm2-runtime", "index.js"]
+CMD ["node", "index.js"]
