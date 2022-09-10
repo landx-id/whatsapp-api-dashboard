@@ -62,7 +62,7 @@ client.on('authenticated', () => {
  * @param {string} number - user wa phone number
  * @param {string} message - message you want to send
 */
-app.post('/send', multer().any(), async (request, response) => {
+app.post('/send/message', multer().any(), async (request, response) => {
     let message = request.body.message;
     let phoneNumber = request.body.number;
 
@@ -79,10 +79,100 @@ app.post('/send', multer().any(), async (request, response) => {
     if(!registered){
         return response.status(400).send('Invalid number');    
     }
-    client.sendMessage(number, message);
+    await client.sendMessage(number, message);
     return response.status(200).send('message sended');
 });
 
+
+/**
+ *  this function is used for sending
+ *  you can use by hit endpoint `/send`
+ * 
+ * Args(form body) :
+ * @param {string} number - user wa phone number
+ * @param {string} message - message you want to send
+*/
+app.post('/send/button', multer().any(), async (request, response) => {
+    let message = request.body.message;
+    let phoneNumber = request.body.number;
+    let title = request.body.title;
+    let footer = request.body.footer;
+    let buttons = JSON.parse(request.body.buttons);
+
+    if(phoneNumber === 'status@broadcast'){
+        return response.status(200).send('brodcast received');
+    }
+    // check for number in request
+    if (!phoneNumber) {
+        return response.status(400).send('Number not found');
+    }
+    number = phoneNumber.includes('@c.us') ? phoneNumber : `${phoneNumber}@c.us`;
+    // check for is number is registered
+    const registered =  await client.isRegisteredUser(number);
+    if(!registered){
+        return response.status(400).send('Invalid number');    
+    }
+    
+    const buttons_reply = new Buttons(message, buttons, title, footer)
+    
+    // send to number
+    for (const component of [buttons_reply]) await client.sendMessage(number, component);
+
+    return response.status(200).send('message sended');
+});
+
+/**
+ *  this function is used for sending
+ *  you can use by hit endpoint `/send`
+ * 
+ * Args(form body) :
+ * @param {string} number - user wa phone number
+ * @param {string} message - message you want to send
+*/
+app.post('/send/list', multer().any(), async (request, response) => {
+    let message = request.body.message;
+    let phoneNumber = request.body.number;
+
+    if(phoneNumber === 'status@broadcast'){
+        return response.status(200).send('brodcast received');
+    }
+    // check for number in request
+    if (!phoneNumber) {
+        return response.status(400).send('Number not found');
+    }
+    number = phoneNumber.includes('@c.us') ? phoneNumber : `${phoneNumber}@c.us`;
+    // check for is number is registered
+    const registered =  await client.isRegisteredUser(number);
+    if(!registered){
+        return response.status(400).send('Invalid number');    
+    }
+
+    const section = {
+    title: 'test',
+    rows: [
+        {
+        title: 'Test 1',
+        },
+        {
+        title: 'Test 2',
+        id: 'test-2'
+        },
+        {
+        title: 'Test 3',
+        description: 'This is a smaller text field, a description'
+        },
+        {
+        title: 'Test 4',
+        description: 'This is a smaller text field, a description',
+        id: 'test-4',
+        }
+    ],
+    };
+
+    const list = new List('test', 'click me', [section], 'title', 'footer')
+    await client.sendMessage(number, list);
+    return response.status(200).send('message sended');
+});
 
 
 client.on('message', async msg => {
