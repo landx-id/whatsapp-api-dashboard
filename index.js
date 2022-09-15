@@ -7,7 +7,7 @@ const request = require('request');
 const e = require('express');
 const dialogflow = require('@google-cloud/dialogflow');
 const uuid = require('uuid');
-var fs = require('fs');
+const fs = require('fs');
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -21,14 +21,12 @@ const port = 5100;
 
 // dialog flow
 
-const projectId = 'daraleiman-basn';
+const projectId = 'example' || process.env.PROJECT_ID;
 const sessionId = uuid.v4();
 
 const sessionClient = new dialogflow.SessionsClient({
-    keyFilename: "daraleiman-basn-949072373450.json"
+    keyFilename: 'example' || process.env.PROJECT_KEY_FILE
 });
- 
-sessionClient
  
 async function Chatting(inputText,phoneNumber) {
 const request = {
@@ -56,9 +54,7 @@ const request = {
   }
 }
 
-
-// const webhookCallback = process.env.https
-const webhookCallback = 'https://n8.utter.academy/webhook/4dbbb47a-4ff3-482a-809b-e3504532d01f'
+const webhookCallback = 'example' || process.env.WEBHOOK
 
 /**
  * Start initiate bot
@@ -94,7 +90,7 @@ client.on('authenticated', () => {
  * END of initiate bot
 */
 
-var download = function(uri, filename, callback){
+let download = function(uri, filename, callback){
     request.head(uri, function(err, res, body){
       request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
     });
@@ -244,8 +240,6 @@ app.post('/send/list', multer().any(), async (request, response) => {
 });
 
 app.post('/send/dialogflow', multer().any(), async (request, response) => {
-    let message = request.body.message;
-    
     return response.status(200).send(await Chatting(msg.body,msg.from));
 });
 
