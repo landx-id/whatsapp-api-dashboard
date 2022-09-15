@@ -1,10 +1,13 @@
 const qrcode = require('qrcode-terminal');
-const { Client, Location, List, Buttons, LocalAuth } = require('whatsapp-web.js');
+const { Client, MessageMedia, List, Buttons, LocalAuth } = require('whatsapp-web.js');
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const request = require('request');
 const e = require('express');
+const dialogflow = require('@google-cloud/dialogflow');
+const uuid = require('uuid');
+var fs = require('fs');
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -16,7 +19,46 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const port = 5100;
 
-const webhookCallback = process.env.WEBHOOK
+// dialog flow
+
+const projectId = 'daraleiman-basn';
+const sessionId = uuid.v4();
+
+const sessionClient = new dialogflow.SessionsClient({
+    keyFilename: "daraleiman-basn-949072373450.json"
+});
+ 
+sessionClient
+ 
+async function Chatting(inputText,phoneNumber) {
+const request = {
+    session: sessionClient.projectAgentSessionPath(
+        projectId,
+        phoneNumber
+    ),
+    queryInput: {
+      text: {
+        // The query to send to the dialogflow agent
+        text: inputText,
+        // The language used by the client (en-US)
+        languageCode: 'id-ID',
+      },
+    },
+  };
+ 
+  // Send request and log result
+  const responses = await sessionClient.detectIntent(request);
+  const result = responses[0].queryResult;
+  if (result.intent) {
+    return result;
+  } else {
+    return "no intent";
+  }
+}
+
+
+// const webhookCallback = process.env.https
+const webhookCallback = 'https://n8.utter.academy/webhook/4dbbb47a-4ff3-482a-809b-e3504532d01f'
 
 /**
  * Start initiate bot
@@ -52,7 +94,46 @@ client.on('authenticated', () => {
  * END of initiate bot
 */
 
+var download = function(uri, filename, callback){
+    request.head(uri, function(err, res, body){
+      request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
+    });
+  };
 
+/**
+ *  this function is used for sending
+ *  you can use by hit endpoint `/send`
+ * 
+ * Args(form body) :
+ * @param {string} number - user wa phone number
+ * @param {string} message - message you want to send
+*/
+app.post('/send/media', multer().any(), async (request, response) => {
+    let message = request.body.message;
+    let attachmentUrl = request.body.attachmentUrl;
+    let attachmentName = request.body.attachmentName;
+    let phoneNumber = request.body.number;
+
+    if(phoneNumber === 'status@broadcast'){
+        return response.status(200).send('brodcast received');
+    }
+    // check for number in request
+    if (!phoneNumber) {
+        return response.status(400).send('Number not found');
+    }
+    number = phoneNumber.includes('@c.us') ? phoneNumber : `${phoneNumber}@c.us`;
+    // check for is number is registered
+    const registered =  await client.isRegisteredUser(number);
+    if(!registered){
+        return response.status(400).send('Invalid number');    
+    }
+    download(attachmentUrl, attachmentName, function(){
+    console.log('done');
+    });
+    let attachment =  MessageMedia.fromFilePath(attachmentName);
+    await client.sendMessage(number, attachment,{caption:message});
+    return response.status(200).send('message sended');
+});
 
 /**
  *  this function is used for sending
@@ -132,6 +213,11 @@ app.post('/send/button', multer().any(), async (request, response) => {
 app.post('/send/list', multer().any(), async (request, response) => {
     let message = request.body.message;
     let phoneNumber = request.body.number;
+    let cta = request.body.cta;
+    let title = request.body.title;
+    let footer = request.body.footer;
+    let buttons = JSON.parse(request.body.buttons);
+
 
     if(phoneNumber === 'status@broadcast'){
         return response.status(200).send('brodcast received');
@@ -148,34 +234,36 @@ app.post('/send/list', multer().any(), async (request, response) => {
     }
 
     const section = {
-    title: 'test',
-    rows: [
-        {
-        title: 'Test 1',
-        },
-        {
-        title: 'Test 2',
-        id: 'test-2'
-        },
-        {
-        title: 'Test 3',
-        description: 'This is a smaller text field, a description'
-        },
-        {
-        title: 'Test 4',
-        description: 'This is a smaller text field, a description',
-        id: 'test-4',
-        }
-    ],
+    title: title,
+    rows: buttons
     };
 
-    const list = new List('test', 'click me', [section], 'title', 'footer')
+    const list = new List(message, cta, [section], title, footer)
     await client.sendMessage(number, list);
     return response.status(200).send('message sended');
 });
 
+app.post('/send/dialogflow', multer().any(), async (request, response) => {
+    let message = request.body.message;
+    
+    return response.status(200).send(await Chatting(msg.body,msg.from));
+});
+
 
 client.on('message', async msg => {
+    if (msg.type != "chat" && msg.type != "list_response" && msg.type != "buttons_response") {
+        msg["body"] = "user send "+msg.type;
+    }
+
+    let chat = await Chatting(msg.body,msg.from);
+    if (chat == 'no intent') {
+        console.log('no intent');
+        msg["isDialogFlow"] = false;
+    }else{
+        console.log('intent');
+        msg["isDialogFlow"] = true;
+        msg["dialogFlowChat"] = chat;
+    }
     let clientServerOptions = {
         uri: webhookCallback,
         body: JSON.stringify(msg),
@@ -189,7 +277,6 @@ client.on('message', async msg => {
             console.log("success");
             return 200;
         }else{
-            console.log(error,response);
             return 500;
         }
     });
