@@ -123,7 +123,7 @@ app.post('/send/media', multer().any(), async (request, response) => {
     if(!registered){
         return response.status(400).send('Invalid number');    
     }
-    download(attachmentUrl, attachmentName, function(){
+    await download(attachmentUrl, attachmentName, function(){
     console.log('done');
     });
     let attachment =  MessageMedia.fromFilePath(attachmentName);
