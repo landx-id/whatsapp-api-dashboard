@@ -8,7 +8,7 @@ if [ $? -eq 0 ]; then
    echo OK, build success
    echo "Running project..."
    docker stop wa-api || true && docker rm wa-api || true
-   docker run -it -p 5100:5100 -v ${pwd}:/src --cap-add=SYS_ADMIN --env-file ./env.list --name wa-api wa-api
+   docker run -it -p 5100:5100 -v ${pwd}:/app --cap-add=SYS_ADMIN --env-file ./env.list --name wa-api wa-api
    if [ $? -eq 0 ]; then
       echo "Running Project Fail"
    fi
