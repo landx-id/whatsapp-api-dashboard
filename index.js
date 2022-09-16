@@ -21,11 +21,11 @@ const port = 5100;
 
 // dialog flow
 
-const projectId = 'example' || process.env.PROJECT_ID;
+const projectId = process.env.PROJECT_ID || 'example' ;
 const sessionId = uuid.v4();
 
 const sessionClient = new dialogflow.SessionsClient({
-    keyFilename: 'example' || process.env.PROJECT_KEY_FILE
+    keyFilename: process.env.PROJECT_KEY_FILE || 'example' 
 });
  
 async function Chatting(inputText,phoneNumber) {
@@ -54,7 +54,7 @@ const request = {
   }
 }
 
-const webhookCallback = 'example' || process.env.WEBHOOK
+const webhookCallback = process.env.WEBHOOK || 'example'
 
 /**
  * Start initiate bot
