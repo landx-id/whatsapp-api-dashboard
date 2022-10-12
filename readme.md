@@ -22,6 +22,8 @@ run `npm start`
 install pm2: run `npm install pm2 --location=global`
 
 run `pm2 start index.js`
+
+for scan QR run `pm2 logs`
 another command please refer to this [docs](https://pm2.keymetrics.io/docs/usage/quick-start/)
 
 
