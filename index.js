@@ -20,7 +20,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const port = 5100;
 
 // dialog flow
-
 const projectId = process.env.PROJECT_ID || 'example' ;
 const sessionId = uuid.v4();
 
@@ -55,13 +54,11 @@ const request = {
 }
 
 const webhookCallback = process.env.WEBHOOK || 'example'
-
 /**
  * Start initiate bot
  * 
  * this bunch of function is to initialize the bot before running
 */
-
 app.listen(port, () => {     
     console.log(`Webhook target ${process.env.WEBHOOK}`);
     console.log(`Now listening on port ${port}`); 
@@ -81,7 +78,6 @@ client.on('ready', () => {
     console.log('Client is ready!');
 });
 
-
 client.on('authenticated', () => {
     console.log('AUTHENTICATED');
 });
@@ -97,12 +93,14 @@ let download = function(uri, filename, callback){
   };
 
 /**
- *  this function is used for sending
- *  you can use by hit endpoint `/send`
+ *  this function is used for sending message with media
+ *  you can use by hit endpoint `/send/media`
  * 
  * Args(form body) :
  * @param {string} number - user wa phone number
  * @param {string} message - message you want to send
+ * @param {string} attachmentUrl - file attachment url
+ * @param {string} attachmentName - file name
 */
 app.post('/send/media', multer().any(), async (request, response) => {
     let message = request.body.message;
@@ -132,8 +130,8 @@ app.post('/send/media', multer().any(), async (request, response) => {
 });
 
 /**
- *  this function is used for sending
- *  you can use by hit endpoint `/send`
+ *  this function is used for sending message text only
+ *  you can use by hit endpoint `/send/message`
  * 
  * Args(form body) :
  * @param {string} number - user wa phone number
@@ -162,12 +160,15 @@ app.post('/send/message', multer().any(), async (request, response) => {
 
 
 /**
- *  this function is used for sending
- *  you can use by hit endpoint `/send`
+ *  this function is used for sending with button
+ *  you can use by hit endpoint `/send/button`
  * 
  * Args(form body) :
  * @param {string} number - user wa phone number
  * @param {string} message - message you want to send
+ * @param {string} title - title of message
+ * @param {string} footer - footer
+ * @param {json string} buttons - buttons ex : [{body:'bt1'},{body:'bt2'},{body:'bt3'}]
 */
 app.post('/send/button', multer().any(), async (request, response) => {
     let message = request.body.message;
@@ -199,12 +200,17 @@ app.post('/send/button', multer().any(), async (request, response) => {
 });
 
 /**
- *  this function is used for sending
- *  you can use by hit endpoint `/send`
+ *  this function is used for sending message and list
+ *  you can use by hit endpoint `/send/list`
  * 
  * Args(form body) :
  * @param {string} number - user wa phone number
  * @param {string} message - message you want to send
+ * @param {string} cta - cta of list
+ * @param {string} title - title of message
+ * @param {string} footer - footer of message
+ * @param {string} buttons - buttons list of message ex : [{title:'ListItem1', description: 'desc'},{title:'ListItem2'}]
+ * 
 */
 app.post('/send/list', multer().any(), async (request, response) => {
     let message = request.body.message;
@@ -243,35 +249,34 @@ app.post('/send/dialogflow', multer().any(), async (request, response) => {
     return response.status(200).send(await Chatting(msg.body,msg.from));
 });
 
+// client.on('message', async msg => {
+//     if (msg.type != "chat" && msg.type != "list_response" && msg.type != "buttons_response") {
+//         msg["body"] = "user send "+msg.type;
+//     }
 
-client.on('message', async msg => {
-    if (msg.type != "chat" && msg.type != "list_response" && msg.type != "buttons_response") {
-        msg["body"] = "user send "+msg.type;
-    }
-
-    let chat = await Chatting(msg.body,msg.from);
-    if (chat == 'no intent') {
-        console.log('no intent');
-        msg["isDialogFlow"] = false;
-    }else{
-        console.log('intent');
-        msg["isDialogFlow"] = true;
-        msg["dialogFlowChat"] = chat;
-    }
-    let clientServerOptions = {
-        uri: webhookCallback,
-        body: JSON.stringify(msg),
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    }
-    request(clientServerOptions, function (error, response) {
-        if (!error && (response && response.statusCode) === 200) {
-            console.log("success");
-            return 200;
-        }else{
-            return 500;
-        }
-    });
-});
+//     let chat = await Chatting(msg.body,msg.from);
+//     if (chat == 'no intent') {
+//         console.log('no intent');
+//         msg["isDialogFlow"] = false;
+//     }else{
+//         console.log('intent');
+//         msg["isDialogFlow"] = true;
+//         msg["dialogFlowChat"] = chat;
+//     }
+//     let clientServerOptions = {
+//         uri: webhookCallback,
+//         body: JSON.stringify(msg),
+//         method: 'POST',
+//         headers: {
+//             'Content-Type': 'application/json'
+//         }
+//     }
+//     request(clientServerOptions, function (error, response) {
+//         if (!error && (response && response.statusCode) === 200) {
+//             console.log("success");
+//             return 200;
+//         }else{
+//             return 500;
+//         }
+//     });
+// });

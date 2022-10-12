@@ -12,9 +12,29 @@ using express.js for web server.
 [![npm](https://img.shields.io/npm/v/whatsapp-web.js.svg)](https://www.npmjs.com/package/whatsapp-web.js) [![Depfu](https://badges.depfu.com/badges/4a65a0de96ece65fdf39e294e0c8dcba/overview.svg)](https://depfu.com/github/pedroslopez/whatsapp-web.js?project_id=9765) ![WhatsApp_Web 2.2224.8](https://img.shields.io/badge/WhatsApp_Web-2.2224.8-brightgreen.svg)
 
 # requirement
-- docker ([install docker](https://docs.docker.com/get-docker/))
+- npm
 # usage
-run `./shell`
+Initiate dev: run `npm install`
+
+run `npm start`
+
+# production
+install pm2: run `npm install pm2 --location=global`
+
+run `pm2 start index.js`
+another command please refer to this [docs](https://pm2.keymetrics.io/docs/usage/quick-start/)
+
+
+
+# integrate with dialogflow
+please fill the requirement parameter in `env.list` file, you can copy it from `env_example.list`
+
+```
+WEBHOOK= #webhook url for customizable 
+PROJECT_ID= #dialog_flow project id from google console
+PROJECT_KEY_FILE= #dialog_flow project key file directory
+```
+
 
 # try it on postman
 click this link https://www.getpostman.com/collections/cd5ccc53e2f30f06b388
