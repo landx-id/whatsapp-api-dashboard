@@ -17,7 +17,7 @@ const client = new Client({
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-const port = 5100;
+const port = process.env.PORT || 5100;
 
 // dialog flow
 const projectId = process.env.PROJECT_ID || 'example' ;
@@ -86,7 +86,7 @@ client.on('authenticated', () => {
  * END of initiate bot
 */
 
-let download = function(uri, filename, callback){
+let download = function async (uri, filename, callback) {
     request.head(uri, function(err, res, body){
       request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
     });
@@ -122,7 +122,7 @@ app.post('/send/media', multer().any(), async (request, response) => {
         return response.status(400).send('Invalid number');    
     }
     await download(attachmentUrl, attachmentName, function(){
-    console.log('done');
+        console.log('done');
     });
     let attachment =  MessageMedia.fromFilePath(attachmentName);
     await client.sendMessage(number, attachment,{caption:message});
