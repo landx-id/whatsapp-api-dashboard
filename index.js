@@ -123,9 +123,9 @@ app.post('/send/media', multer().any(), async (request, response) => {
     }
     await download(attachmentUrl, attachmentName, function(){
         console.log('done');
+        let attachment =  MessageMedia.fromFilePath(attachmentName);
+        client.sendMessage(number, attachment,{caption:message});
     });
-    let attachment =  MessageMedia.fromFilePath(attachmentName);
-    await client.sendMessage(number, attachment,{caption:message});
     return response.status(200).send('message sended');
 });
 
