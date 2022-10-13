@@ -1,1 +1,0 @@
-# Dashboard for WhatsApp API provided by https://adiwajshing.github.io/Baileys/
