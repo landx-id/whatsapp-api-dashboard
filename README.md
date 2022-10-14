@@ -22,7 +22,18 @@ Run
 
 ## Deploy on Production
 
-It's recommeded to run in using `pm2` on production environment.
+
+### Using Docker
+
+Using Docker is most preferred way to run this application.
+
+```bash
+~$ docker run landx/whatsapp-api-dashboard
+```
+
+### Using pm2
+
+If you do not want to run it with Docker, it's recommended to run in using `pm2` on production environment.
 
 Install `pm2`
 
