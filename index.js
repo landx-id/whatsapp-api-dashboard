@@ -4,10 +4,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
 const request = require('request');
-const e = require('express');
 const dialogflow = require('@google-cloud/dialogflow');
-const uuid = require('uuid');
 const fs = require('fs');
+const Sentry = require("@sentry/node");
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -15,13 +14,22 @@ const client = new Client({
 });
 
 const app = express();
+
+// sentry DSN
+const sentryDSN = process.env.SENTRY_DSN;
+if (typeof sentryDSN !== 'undefined' && sentryDSN !== "") {
+    Sentry.init({ dsn: sentryDSN });
+    app.use(Sentry.Handlers.requestHandler());
+}
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+
 const port = process.env.PORT || 5100;
 
 // dialog flow
 const projectId = process.env.PROJECT_ID || 'example' ;
-const sessionId = uuid.v4();
 
 const sessionClient = new dialogflow.SessionsClient({
     keyFilename: process.env.PROJECT_KEY_FILE || 'example' 
@@ -53,7 +61,6 @@ const request = {
   }
 }
 
-const webhookCallback = process.env.WEBHOOK || 'example'
 /**
  * Start initiate bot
  * 
@@ -87,7 +94,7 @@ client.on('authenticated', () => {
 */
 
 let download = function async (uri, filename, callback) {
-    request.head(uri, function(err, res, body){
+    request.head(uri, function(){
       request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
     });
   };
@@ -245,9 +252,21 @@ app.post('/send/list', multer().any(), async (request, response) => {
     return response.status(200).send('message sended');
 });
 
-app.post('/send/dialogflow', multer().any(), async (request, response) => {
+app.post('/send/dialogflow', multer().any(), async (_, response) => {
     return response.status(200).send(await Chatting(msg.body,msg.from));
 });
+
+app.post('/send/dialogflow', multer().any(), async (_, response) => {
+    return response.status(200).send(await Chatting(msg.body,msg.from));
+});
+
+app.get('/health_check', multer().any(), async (_, response) => {
+    return response.status(200).send('ok');
+});
+
+if (typeof sentryDSN !== 'undefined' && sentryDSN !== "") {
+    app.use(Sentry.Handlers.errorHandler());
+}
 
 // client.on('message', async msg => {
 //     if (msg.type != "chat" && msg.type != "list_response" && msg.type != "buttons_response") {
